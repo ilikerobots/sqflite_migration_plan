@@ -8,10 +8,12 @@ Specify a MigrationPlan, which is a group of Migrations each associated with a v
 
 ```dart
 MigrationPlan myMigrationPlan = MigrationPlan({
+
   2: [ //Migration for v2: create a table using SQL Operation
     SqlMigration('''CREATE TABLE $_table ( $_my_columns )''')
                    reverseSql: 'DROP TABLE $_table')// Reverse drops the table
    ],
+ 
   3: [  //Migration for v3: add initial records using custom function
     Migration.fromOperationFunctions((db) async {
       _insertRecord(Entity(null, "Mordecai", "Pitcher"), db);
@@ -20,8 +22,9 @@ MigrationPlan myMigrationPlan = MigrationPlan({
       return Future.value(null);
     }, reverseOp: (db) async => db.execute('DELETE FROM $_table'))
   ],
+
   4: [// Two migration for v4: add a column, set initial values
-    // a custom Operation defines desired behavior of adding/removing col
+    // a custom Migration defines desired behavior of adding/removing col
     AddColumnMigration(_table, _columnHome['name']!, _columnHome['def']!,
         [_columnId, _columnName, _columnDesc]),
     Migration.fromOperationFunctions((db) async => db.execute(
@@ -45,20 +48,7 @@ Then, provide this migration plan as `onCreate`, `onUpgrade`, and/or `onDowngrad
 
 The specified migration plan will then assume control of migrating a database on open, selecting the appropriate operations based on the existing database version and the version specified on open.
 
-See the project in example for more details.
-
-
-
-TODO NOTES:
-* noop reverse func operation can be left off, default is noop
-* custom migration subclasses can be used or use the generic
-* SQL operations for convenience
-* can use the migration function for 
-* Show capturing results by using a custom subclass
-* Operations guaranteed to run in order (ascending or descending depending on upgrade/downgroade)
-* Currently only one "convenience" migration: SqlMigraiton.  MOre to come?
-* capturing results?  implement custom migration and store
-
+See the [example project](./example/) for a more complete illustration.
 
 ## Concepts: MigrationPlan and Migration
 
@@ -68,7 +58,7 @@ A `Migration` is conceptually a pair of functions: a forward function which effe
 
 ## Building a Migration Plan
 
-Construct a `MigrationPlan` with a Map associating integer database versions with a `List<Migration>`.  The list of migrations are given in the order they should be run (when upgrading).
+Construct a `MigrationPlan` with a Map associating integer database versions with a `List<Migration>`.  The list of migrations are given in the order they are to run when upgrading (they will run in reverse order during on dowgrade).
 
 
 Individual migrations can be built via constructor, providing the minimum argument of a single `Operation`.  By default, reverse operations are considered *No Op* (see *Downgrading* section for additional info).
@@ -95,9 +85,9 @@ When an Operation throws an exception, the Migration containing this Operation w
 
 When an Operation's error strategy for a given operation is `Throw`, an encountered exception is captured and encapsulated in a `DatabaseMigrationException`, with the original underlying exception assigned to the `cause` field.  Additional information, such as the specific version that encountered the error, is included in the exception.
 
-The exception is handled normally by sqflite's openDatabase() method, which encapsulates the migration procedure in a transaction. A thrown exception in an operation will cancel the _entire_ onCreate, onUpgrade, or onDowngrade database transaction, leaving the database untouched from its original state.
+The exception is handled normally by sqflite's `openDatabase()` method, which encapsulates the migration procedure in a transaction. A thrown exception in an operation will cancel the _entire_ onCreate, onUpgrade, or onDowngrade database transaction, leaving the database untouched from its original state.
 
-Note however, that any non-database side-effects contained in operations that have run in the course of a failed migration will be persistent.  Such side effects should be avoided.
+Note however, that any non-database side-effects contained in operations that have run in the course of a failed migration will be persistent.  Generally, such side effects should be avoided.
 
 #### Ignore
 
@@ -107,7 +97,7 @@ The exception is ''squashed'' and the migration will continue as if no error had
 
 Per [sqflite documentation](https://pub.dev/documentation/sqflite/latest/sqflite/openDatabase.html), the circumstances requiring a downgrade should be quite rare and "[y]ou should try to avoid this scenario". Indeed, except in development scenarios, I have been unable to imagine the circumstances in which application code would be aware of the migrations for a particular version of a database and yet also wish to downgrade that database to a prior version.  Ideas welcome. 
 
-At the risk of stating the obvious, it must be noted that database migrations would **not**  be executed as a result of a straightforward downgrade of an *application* from version Q to P, as the downgrade migrations for the version Q would not exist in the downgraded application version P. 
+At the risk of stating the obvious, it must be noted that database migrations would **not**  be executed as a result of a straightforward downgrade of an *application* from version Q to P, as the downgrade migrations for the version Q would not exist in the downgraded application version P code. 
 
 So, is there a point to providing migration reverse operations? Maybe. If it is useful, then it would likely be as a result of your testing or development practices rather than deployed production code.
 
@@ -128,7 +118,7 @@ Idempotent operations are common examples where reverse operations might often b
 
 ## Capturing Results
 
-Information obtained during the course of migration can be captured by Operations.  These can be recorded externally (e.g. a log file, json files) or assigned to a field of the operation.  The field can subsequently be accessed after migration.  An example of this is in the [example app](./example).
+Information obtained during the course of migration can be captured by custom Operations.  These can be recorded externally (e.g. a log file, json files) or assigned to a field of the operation.  The field can subsequently be accessed after migration.  An [example of capturing results](./example/lib/src/capture_result_migration.dart) is in the [example app](./example).
 
 ## Todo
 
