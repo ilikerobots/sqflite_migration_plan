@@ -57,14 +57,14 @@ A `Migration` is conceptually a pair of functions: a forward function which effe
 
 ## Building a Migration Plan
 
-Construct a `MigrationPlan` with a Map associating integer database versions with a `List<Migration>`.  The list of migrations are given in the order they are to run when upgrading (they will run in reverse order during on dowgrade).
+Construct a `MigrationPlan` with a Map associating integer database versions with a `List<Migration>`.  The list of migrations are given in the order they are to run when upgrading (they will run in reverse order on downgrade).
 
 
 Individual migrations can be built via constructor, providing the minimum argument of a single `Operation`.  By default, reverse operations are considered *No Op* (see *Downgrading* section for additional info).
 
 Alternatively, custom migration classes extending/implementing Migration may be utilized.  One such example, `SqlMigration` whose operations execute SQL, is currently provided.
 
-Custom migrations may perform tasks other than directly modifying a database (e.g. logging/reporting) but care should be taken when introducing such side-effects.  While failed migrations will not commit to the database, any non-database side-effects will persist in the event of migration failure.
+Custom migrations may perform tasks other than directly modifying a database (e.g. logging/reporting) but care should be taken introducing such side-effects.  While failed migrations will not commit to the database, any non-database side-effects will persist in the event of migration failure.
 
 ## Errors
 
@@ -76,13 +76,13 @@ When authoring migration operations, it is important to take into account what c
 
 While it is expected that migration errors can and should be fully avoidable with reasonable care, this package nonetheless provides tools to assist in handling and recovering from migration errors.
 
-An error occurs when any Operation invocation throws an exception. This commonly would be a DatabaseException but could in fact be any exception as dictated by your operation code.
+An error occurs when any Operation invocation throws an exception. This commonly would be a `DatabaseException` but could in fact be any exception as dictated by your operation code.
 
 When an Operation throws an exception, the Migration containing this Operation will handle the exception based on the value of the Operation's errorStrategy and/or reverseErrorStrategy.  By default, the Migration's error strategy is `Throw` but this can be specified by providing the parameter `errorStrategy`.  The reverse operation's error strategy is assumed to the same as `errorStrategy`, but can be specified distinctly using `reverseErrorStrategy`.
 
 #### Throw strategy (default)
 
-When an Operation's error strategy for a given operation is `Throw`, an encountered exception is captured and encapsulated in a `DatabaseMigrationException`, with the original underlying exception assigned to the `cause` field.  Additional information, such as the specific version that encountered the error, is included in the exception.
+When an Operation's error strategy for a given operation is `Throw`, an encountered exception is captured and encapsulated in a `DatabaseMigrationException`, with the original underlying exception assigned to the `cause` field.  Additional information, such as the specific version that encountered the error, is included in the exception.  `DatabaseMigrationException` is itself a `DatabaseException`, so it may be inspected using that interface directly.
 
 The exception is handled normally by sqflite's `openDatabase()` method, which encapsulates the migration procedure in a transaction. A thrown exception in an operation will cancel the _entire_ onCreate, onUpgrade, or onDowngrade database transaction, leaving the database untouched from its original state.
 
