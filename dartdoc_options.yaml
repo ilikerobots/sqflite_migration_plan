@@ -1,0 +1,6 @@
+dartdoc:
+  examplePathPrefix: 'example'
+  ignore:
+    - ambiguous-doc-reference
+    - unresolved-doc-reference
+  errors:

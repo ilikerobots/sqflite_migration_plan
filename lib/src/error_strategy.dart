@@ -1,6 +1,11 @@
 library sqflite_migration_plan;
 
+/// Enumerates the ways in which exceptions in an [Operation] should be handled
+/// during the course of upgrade or downgrade.
 enum MigrationErrorStrategy {
-  Throw, // Immediately rethrow encountered exception
-  Ignore, // Squash any encountered exceptions and proceed
+  /// Halt and rethrow encountered exception
+  Throw,
+
+  /// Squash any encountered exceptions and proceed
+  Ignore,
 }

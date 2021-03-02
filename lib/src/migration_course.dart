@@ -6,8 +6,10 @@ import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_migration_plan/sqflite_migration_plan.dart';
 
+import 'migration_operation_exception.dart';
+
 class MigrationCourse {
-  final log = Logger('SqlfliteMigrator');
+  final _log = Logger('SqlfliteMigrator');
   final List<int> _versions;
   final Map<int, List<Operation>> _opsByVersion;
 
@@ -16,12 +18,12 @@ class MigrationCourse {
   Future<void> execute(Database db) async {
     for (int version in _versions) {
       List<Operation> ops = _opsByVersion[version] ?? const [];
-      log.finer(
+      _log.finer(
           "Executing migration course with ${ops.length} operation(s) for version $version");
       try {
         await _execOperationsForVersion(ops, db);
       } catch (err) {
-        log.fine("Error during migration course at ver $version: $err");
+        _log.fine("Error during migration course at ver $version: $err");
         throw MigrationOperationException(version, err);
       }
     }
@@ -33,16 +35,16 @@ class MigrationCourse {
     int i = 0;
     for (Operation operation in operations) {
       try {
-        log.finest("Executing migration operation $i for this version");
+        _log.finest("Executing migration operation $i for this version");
         await operation(db);
         i++;
       } catch (err) {
         if (operation.errorStrategy == MigrationErrorStrategy.Throw) {
-          log.fine(
+          _log.fine(
               "Aborting migration due to error strategy ${operation.errorStrategy}");
           rethrow;
         } else {
-          log.finer(
+          _log.finer(
               "Ignoring migration due to error strategy ${operation.errorStrategy}");
         }
       }

@@ -1,6 +1,6 @@
 # sqflite_migration_plan
 
-Painless upgrades and downgrades for your Flutter [sqflite](https://pub.dev/packages/sqflite) database. Alter schemas, seed tables, and update data with a concise and readable syntax.  
+Flexible migrations (upgrade and downgrade) for your Flutter [sqflite](https://pub.dev/packages/sqflite) database. Alter schemas, seed tables, and update data with a concise and readable syntax.  
 
 ## Quickstart
 
@@ -12,15 +12,14 @@ MigrationPlan myMigrationPlan = MigrationPlan({
   2: [ //Migration for v2: create a table using SQL Operation
     SqlMigration('''CREATE TABLE $_table ( $_my_columns )''')
                    reverseSql: 'DROP TABLE $_table')// Reverse drops the table
-   ],
+  ],
  
   3: [  //Migration for v3: add initial records using custom function
-    Migration.fromOperationFunctions((db) async {
-      _insertRecord(Entity(null, "Mordecai", "Pitcher"), db);
-      _insertRecord(Entity(null, "Tommy", "Pitcher"), db);
-      _insertRecord(Entity(null, "Max", "Center Field"), db);
-      return Future.value(null);
-    }, reverseOp: (db) async => db.execute('DELETE FROM $_table'))
+    Migration(Operation((db) async {
+        _insertRecord(Entity(null, "Mordecai", "Pitcher"), db);
+        _insertRecord(Entity(null, "Tommy", "Pitcher"), db);
+        _insertRecord(Entity(null, "Max", "Center Field"), db);
+    }), reverse: Operation((db) async => db.execute('DELETE FROM $_table')))
   ],
 
   4: [// Two migration for v4: add a column, set initial values
@@ -30,14 +29,14 @@ MigrationPlan myMigrationPlan = MigrationPlan({
     Migration.fromOperationFunctions((db) async => db.execute(
         'UPDATE $_table SET ${_columnHome['name']} = \'Terre Haute\'')),
     // Omit the reverse; no action on downgrade of this operation
-  ],
+  ]
 });
 ```
 
 Then, provide this migration plan as `onCreate`, `onUpgrade`, and/or `onDowngrade` arguments (as needed) to the sqflite `openDatabase` function.
 
 ```dart
- return await openDatabase(
+await openDatabase(
     join(documentsDirectory.path, _databaseName),
     version: _databaseVersion,
     onCreate: myMigrationPlan, // handle initial upgrade tasks
@@ -48,7 +47,7 @@ Then, provide this migration plan as `onCreate`, `onUpgrade`, and/or `onDowngrad
 
 The specified migration plan will then assume control of migrating a database on open, selecting the appropriate operations based on the existing database version and the version specified on open.
 
-See the [example project](./example/) for a more complete illustration.
+See the [example project](https://github.com/ilikerobots/sqflite_migration_plan/tree/main/example) for a more complete illustration.
 
 ## Concepts: MigrationPlan and Migration
 
@@ -95,7 +94,7 @@ The exception is ''squashed'' and the migration will continue as if no error had
 
 ## Downgrading
 
-Per [sqflite documentation](https://pub.dev/documentation/sqflite/latest/sqflite/openDatabase.html), the circumstances requiring a downgrade should be quite rare and "[y]ou should try to avoid this scenario". Indeed, except in development scenarios, I have been unable to imagine the circumstances in which application code would be aware of the migrations for a particular version of a database and yet also wish to downgrade that database to a prior version.  Ideas welcome. 
+Per [sqflite documentation](https://pub.dev/documentation/sqflite/latest/sqflite/openDatabase.html), the circumstances requiring a downgrade should be quite rare and "you should try to avoid this scenario". Indeed, except in development scenarios, I have been unable to imagine the circumstances in which application code would be aware of the migrations for a particular version of a database and yet also wish to downgrade that database to a prior version.  Ideas welcome. 
 
 At the risk of stating the obvious, it must be noted that database migrations would **not**  be executed as a result of a straightforward downgrade of an *application* from version Q to P, as the downgrade migrations for the version Q would not exist in the downgraded application version P code. 
 
@@ -118,8 +117,8 @@ Idempotent operations are common examples where reverse operations might often b
 
 ## Capturing Results
 
-Information obtained during the course of migration can be captured by custom Operations.  These can be recorded externally (e.g. a log file, json files) or assigned to a field of the operation.  The field can subsequently be accessed after migration.  An [example of capturing results](./example/lib/src/capture_result_migration.dart) is in the [example app](./example).
+Information obtained during the course of migration can be captured by custom Operations.  These can be recorded externally (e.g. a log file, json files) or assigned to a field of the operation.  The field can subsequently be accessed after migration.  An [example of capturing results](https://github.com/ilikerobots/sqflite_migration_plan/tree/main/example/lib/src/capture_result_migration.dart) is in the [example app](https://github.com/ilikerobots/sqflite_migration_plan/tree/main/example).
 
-## Todo
+## Future enhancements
 
 I would like to include a library of Migrations and Operations for common tasks such as adding columns, renaming columns/tables, 
