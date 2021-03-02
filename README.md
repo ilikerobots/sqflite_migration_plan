@@ -45,7 +45,7 @@ await openDatabase(
 );
 ```
 
-The specified migration plan will then assume control of migrating a database on open, selecting the appropriate operations based on the existing database version and the version specified on open.
+The specified migration plan will then assume control of migrating a database on open, selecting then executing in order the appropriate operations based on the existing database version and the version specified on open.
 
 See the [example project](https://github.com/ilikerobots/sqflite_migration_plan/tree/main/example) for a more complete illustration.
 
