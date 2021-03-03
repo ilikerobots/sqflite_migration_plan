@@ -1,6 +1,6 @@
 name: sqflite_migration_plan
 description: Flexible migrations for sqflite with a clear concise syntax.
-version: 0.1.0-nullsafety.1
+version: 0.1.0-nullsafety.2
 homepage: https://github.com/ilikerobots/sqflite_migration_plan
 
 environment:
