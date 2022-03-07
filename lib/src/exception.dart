@@ -96,4 +96,7 @@ class DatabaseMigrationException implements DatabaseException {
 
   @override
   String toString() => 'DatabaseMigrationException($_message)';
+
+  @override
+  Object? get result => null;
 }

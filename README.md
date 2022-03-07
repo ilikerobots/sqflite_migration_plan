@@ -86,7 +86,7 @@ When an Operation's error strategy for a given operation is `Throw`, an encounte
 
 The exception is handled normally by sqflite's `openDatabase()` method, which encapsulates the migration procedure in a transaction. A thrown exception in an operation will cancel the _entire_ onCreate, onUpgrade, or onDowngrade database transaction, leaving the database untouched from its original state.
 
-Note however, that any non-database side-effects contained in operations that have run in the course of a failed migration will be persistent.  Generally, such side effects should be avoided.
+Note however, that any non-database side-effects contained in operations that have run in the course of a failed migration will be persistent.
 
 #### Ignore
 

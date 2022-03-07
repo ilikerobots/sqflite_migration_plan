@@ -6,7 +6,6 @@ import 'package:logging/logging.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_migration_plan/sqflite_migration_plan.dart';
 
-import 'exception.dart';
 import 'migration_course.dart';
 import 'migration_operation_exception.dart';
 
@@ -118,12 +117,12 @@ class MigrationPlan {
       return (_migrationsByVersion.keys
           .where((v) => v > fromVersion && v <= toVersion)
           .toList()
-            ..sort((a, b) => a.compareTo(b)));
+        ..sort((a, b) => a.compareTo(b)));
     } else {
       return (_migrationsByVersion.keys
           .where((v) => v <= fromVersion && v > toVersion)
           .toList()
-            ..sort((a, b) => b.compareTo(a)));
+        ..sort((a, b) => b.compareTo(a)));
     }
   }
 }
